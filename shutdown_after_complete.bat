@@ -1,0 +1,1 @@
+powershell %~dp0shutdown_after_complete.ps1
