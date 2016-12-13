@@ -1,0 +1,136 @@
+﻿TOPIC
+    about_Transmission_torrent_server
+
+SHORT DESCRIPTION
+    Description of the transmission torrent server.
+
+LONG DESCRIPTION
+    Writing a PowerShell script or function is only a little different than
+    using the interactive console. If you can run a command at the console
+    you can copy and paste that into your script file and vice versa. But,
+    whereas the goal in the console is economy and efficiency, in scripting
+    the goal is clarity and consistency.
+    
+    To that end, here a some recommended best practices for writing your own
+    PowerShell scripts and functions.
+    
+    NAMING
+        Wherever possible, name your scripts and functions using the accepted
+        Verb-Noun format. Use one of the standard verbs that you see when
+        running Get-Verb. The noun can be a bit more flexible, but try to keep
+        it singular.
+        
+        If you think your noun might conflict with another cmdlet, then use a 
+        prefix. If you are building a collection of functions or a module you
+        might want to do this anyway. Instead of creating a function called
+        Get-File you might call it Get-MyFile.
+    
+    NO ALIASES
+        When calling a cmdlet in your script or function, always refer to it
+        by it's full name and never an alias. It may take a moment longer to 
+        write, but you only have to do it once and the full cmdlet name makes
+        it easier to understand.
+        
+        An exception can be made for well known aliases like DIR.
+        
+    PARAMETERS
+        On a related note, always use full parameter names, even for positional
+        parameters. A command like:
+        
+          Get-WMIObject -class win32_operatingsystem -computername SERVER01
+        
+        is much easier to understand than:
+        
+          gwmi win32_operatingsystem -co SERVER01
+        
+        Yes, the command may take longer to write, but at least it will be
+        clear and self-documenting.
+    
+    FUNCTIONS OR SCRIPTS?
+        One of your first decisions is whether you are writing a standalone
+        script or a function.  Of course, functions need to reside in a script
+        file that you can then dot source or include in a module. My rule of
+        thumb is to write functions for repeatable, modular, or atomic 
+        commands that can be incorporated into the pipeline or a larger script.
+        
+        I use stand-alone scripts when I have a series of commands that I need
+        repeated periodically but obviously don't want to type them. Or I need
+        to ensure consistency. I think of these scripts as "canned" PowerShell
+        sessions. In fact a great way to build this type of script is to start
+        a transcript, run through your commands and then edit your transcript,
+        deleting everything but your commands. The resulting script can be run
+        at anytime to "recreate" the PowerShell session. Of course, you can
+        include your own functions as well. Remember that functions must be
+        defined before you can call them.
+    
+    SINGLE PURPOSE
+        Especially when writing functions, keep your function focused on a
+        single task. Don't write a monolithic function that does everything.
+        Write a function that does one thing and that can participate in the
+        pipeline. You want to maintain flexibility. For example, if you include
+        code in your function to write your data to Format-Table, you can't
+        do anything else with that function except send it to a cmdlet like
+        Out-File. If tomorrow you decide you need to sort on the output, you
+        can't. 
+        
+        My corollary best practice is to keep formatting separate from your
+        scripts and functions.
+       
+    RETURN vs WRITE
+        Try to avoid using the RETURN keyword at the end of your function. 
+        Think "writing objects to the pipeline" and not "returning values".
+        When you use RETURN, PowerShell will write the value to the pipeline
+        and then terminate the pipeline. If you have more data or more 
+        commands after RETURN you'll never see them.
+       
+    WRITE-HOST
+        Do not use Write-Host to output data from your script or function. 
+        This cmdlet writes to the console and not the pipeline which means 
+        you can't pipe your script or function to other PowerShell cmdlets 
+        such as Sort-Object or Out-File. Using Write-Host for informational
+        messages is a good use. I recommend using a foreground or background
+        color with Write-Host so you can differentiate your messages from the
+        actual output. 
+        
+        You might also consider implementing Write-Verbose or Write-Progress.
+        
+    CODE FORMATTING
+        Make your PowerShell scripts easy to read. Take advantage of whitespace
+        and indentations. The worst thing you can do is create a 100 line
+        script that is single spaced and left-justified. Nobody will be able
+        to help you debug or troubleshoot. There are no performance penalties.
+        
+        You should also come up with a formatting style or template and be
+        consistent. This is especially important if you are developing scripts
+        in a team setting.        
+    
+    DOCUMENTATION
+        Finally, it is very important that you document your script, especially
+        sections that might be complex or involve scripting constructs like
+        IF or SWITCH. The comment character is #. You can use it like this:
+        
+           get-service | 
+             where-object {$_.status -eq 'Running'} #Get all running services
+             
+        Or like this, which is what I prefer:
+            
+            #Get all running services
+            get-service | 
+             where-object {$_.status -eq 'Running'} 
+        
+        If you have several documentation lines, then use this format:
+        
+            <#
+                I am a long document comment.
+                It is very important that you read me.
+            #>
+        
+        I recommend that when you start developing your script or function to
+        write each step or task that you want to accomplish as a comment. This
+        helps you organize your thoughts and layout the script of function. 
+        Then all you need to do is write code to meet the documentation and 
+        when you are finished, your script is already documented.
+        
+SEE ALSO
+    About_functions
+    About_functions_advanced
