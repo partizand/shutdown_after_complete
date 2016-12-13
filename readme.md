@@ -23,10 +23,10 @@ sudo позволяет разрешать или запрещать польз�
 
 Для того, что бы система не запрашивала пароль при определенных командах необходимо в sudoers после строки **# Cmnd alias specification** добавить строку, где через запятую перечислить желаемые команды с полным путём (путь команды можно узнать, выполнив which имя_команды:
 	
-	```bash
-	# Cmnd alias specification
-	Cmnd_Alias SHUTDOWN_CMDS = /sbin/shutdown, /usr/sbin/pm-hibernate, /sbin/reboot
-	```
+```bash
+# Cmnd alias specification
+Cmnd_Alias SHUTDOWN_CMDS = /sbin/shutdown, /usr/sbin/pm-hibernate, /sbin/reboot
+```
 	
 И в конец файла дописать строку
 	
@@ -37,21 +37,22 @@ sudo позволяет разрешать или запрещать польз�
 
 ### transmission script 1
 
-	``` bash
-	# Shutdown tranmission and eventually NAS
-	count=$(transmission-remote --auth username:password --list | sed '1d;$d' | grep -v Done | wc -l)
-	if [ $count -eq 0 ]; then
-		transmission-remote --auth username:password --exit
-		sleep 10
-		sudo -h shutdown now
-	fi
+```bash
+# Shutdown tranmission and eventually NAS
+count=$(transmission-remote --auth username:password --list | sed '1d;$d' | grep -v Done | wc -l)
+if [ $count -eq 0 ]; then
+	transmission-remote --auth username:password --exit
+	sleep 10
+	sudo -h shutdown now
+fi
+```
 
 ### transmission script 2
 	
 Еще одно маленькое замечание: в принципе, почти всё это делается вот таким однострочником на unix shell:
 	
-	```
-	while true; do [ -z "$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; 1d; $d')" ] && sudo /sbin/poweroff || sleep 5; done
+```bash
+while true; do [ -z "$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; 1d; $d')" ] && sudo /sbin/poweroff || sleep 5; done
 
 Если демон transmission закрыт авторизацией, то нужно в вызов transmission-remote добавить -nlogin:password. Если нужно добавить какие-то еще условия, по которым можно разрешить poweroff — например, разрешить poweroff не только, когда все торренты «Done», но еще когда есть часть торрентов в «Unknown» — то нужно добавить это /^Unknown/ d в регулярное выражение в аргументе sed'а.
 
