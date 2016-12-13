@@ -53,6 +53,7 @@ fi
 	
 ```bash
 while true; do [ -z "$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; 1d; $d')" ] && sudo /sbin/poweroff || sleep 5; done
+```
 
 Если демон transmission закрыт авторизацией, то нужно в вызов transmission-remote добавить -nlogin:password. Если нужно добавить какие-то еще условия, по которым можно разрешить poweroff — например, разрешить poweroff не только, когда все торренты «Done», но еще когда есть часть торрентов в «Unknown» — то нужно добавить это /^Unknown/ d в регулярное выражение в аргументе sed'а.
 
