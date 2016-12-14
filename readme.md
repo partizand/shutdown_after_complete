@@ -7,19 +7,11 @@
 
 ## Linux version
 
-### Разрешение пользователю выполнять команду без ввода пароля
+### Разрешение пользователю выключить компьютер без ввода пароля
 
 sudo позволяет разрешать или запрещать пользователям выполнение конкретного набора программ. Все настройки, связанные с правами доступа, хранятся в файле /etc/sudoers. Это не совсем обычный файл. Для его редактирования необходимо (в целях безопасности) использовать команду
 
 	sudo visudo
-
-По умолчанию, в нём написано, что все члены группы admin имеют полный доступ к sudo, о чём говорит строчка
-
-	%admin ALL=(ALL) ALL
-
-Подробнее о синтаксисе и возможностях настройки этого файла можно почитать выполнив
-
-	man sudoers
 
 Для того, что бы система не запрашивала пароль при определенных командах необходимо в sudoers после строки **# Cmnd alias specification** добавить строку, где через запятую перечислить желаемые команды с полным путём (путь команды можно узнать, выполнив which имя_команды:
 	
@@ -34,52 +26,24 @@ Cmnd_Alias SHUTDOWN_CMDS = /sbin/shutdown, /usr/sbin/pm-hibernate, /sbin/reboot
 		
 Внимание! Вышеописанные действия не отменяют необходимости ввода команды sudo перед вашей командой 
 
+### Скрипт для выключения по завершении всех закачек
 
-### transmission script 1
+Расположите скрипт *transmission-shutdown* в своем домашнем каталоге.
 
-```bash
-# Shutdown tranmission and eventually NAS
-count=$(transmission-remote --auth username:password --list | sed '1d;$d' | grep -v Done | wc -l)
-if [ $count -eq 0 ]; then
-	transmission-remote --auth username:password --exit
-	sleep 10
-	sudo -h shutdown now
-fi
-```
+Дайте себе права на запуск
 
-### transmission script 2
+	chmod +x ~/transmission-shutdown
+
+Добавьте в Transmission настройку запуска скрипта *transmission-shutdown* по завершении закачки торрента, отредактировав settings.json, изменив строчки:
+
+	"script-torrent-done-enabled": true,
+	"script-torrent-done-filename": "/home/USER_NAME/transmission-shutdown",
+
+Теперь если запустить торрент shutdown_after_complete, то компьютер будет выключен после окончания всех загрузок.
+
+Перед выключением флаг выключения будет сброшен (управляющий торрент будет поставлен на паузу) и в следующий раз необходимо будет стартовать его опять. Можно отменить такое поведение закоментировав строчку (поставить перед ней #) 
 	
-Еще одно маленькое замечание: в принципе, почти всё это делается вот таким однострочником на unix shell:
-	
-```bash
-while true; do [ -z "$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; 1d; $d')" ] && sudo /sbin/poweroff || sleep 5; done
-```
-
-Если демон transmission закрыт авторизацией, то нужно в вызов transmission-remote добавить -nlogin:password. Если нужно добавить какие-то еще условия, по которым можно разрешить poweroff — например, разрешить poweroff не только, когда все торренты «Done», но еще когда есть часть торрентов в «Unknown» — то нужно добавить это /^Unknown/ d в регулярное выражение в аргументе sed'а.
-
-Если кому-нибудь будут полезные еще какие-то пояснения по тому, как работает такой скрипт — спрашивайте ;) 	
-
-### transmission script  3
-	
-еще можно if [[ `transmission-remote -l | grep Done | wc -l` == `transmission-remote -l | wc -l`]]
-как видно сранивается кол-во завершенных закачен с общим кол-вом закачек. ИМХО намного проще того, что у вас. Еще можно добавить проверку Unknown, если послев течении n проверок число не меняется — выключать компьютер. 	
-	
-### С форума
-	
-Такая проблема, поставил Ubuntu 12.10 установил transmission и решил настроить автоматическое выключение системы после загрузки. создал файл shutdown.sh в /home/USER_NAME, прописал в нем "sudo shutdown -h now", сделал файл исполняемым "chmod +x shutdown.sh". Потом отредактировал /etc/sudoers прописав туда строчку:
-"USER_NAME ALL=(ALL) NOPASSWD: ALL", чтобы пароль не спрашивал, проверил скрипт командой: "./shutdown.sh" устройство выключается, все работает.
-
-Затем отредактировал settings.json изменив строчки 
-
-"script-torrent-done-enabled": true,
-"script-torrent-done-filename": "/home/USER_NAME/shutdown.sh",
-
-После этого ставлю на закачку, файл скачивается но ничего не происходит...
-не могу понять почему, может я что-то неправильно сделал?
-
-
-
-## Windows version
+	transmission-remote $auth -t $specid --stop
 
 
 ### Требования
@@ -111,5 +75,39 @@ http://www.microsoft.com/en-us/download/details.aspx?id=40855
 ## License
 
 Windows version MIT, Linux version GNU GPL 3
+
+## Надерганные примеры скриптов для bash
+
+### transmission script 1
+
+```bash
+# Shutdown tranmission and eventually NAS
+#count=$(transmission-remote --auth username:password --list | sed '1d;$d' | grep -v Done | wc -l)
+count=$(transmission-remote --list | sed '1d;$d' | grep -v Done | wc -l)
+if [ $count -eq 0 ]; then
+	transmission-remote --auth username:password --exit
+	sleep 10
+	sudo -h shutdown now
+fi
+```
+
+### transmission script 2
+	
+Еще одно маленькое замечание: в принципе, почти всё это делается вот таким однострочником на unix shell:
+	
+```bash
+while true; do [ -z "$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; 1d; $d')" ] && sudo /sbin/poweroff || sleep 5; done
+```
+
+while true; do [ -z "$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; /^Unknown/ d; 1d; $d')" ] && sudo /sbin/poweroff || sleep
+
+Если демон transmission закрыт авторизацией, то нужно в вызов transmission-remote добавить -nlogin:password. Если нужно добавить какие-то еще условия, по которым можно разрешить poweroff — например, разрешить poweroff не только, когда все торренты «Done», но еще когда есть часть торрентов в «Unknown» — то нужно добавить это /^Unknown/ d в регулярное выражение в аргументе sed'а.
+
+Если кому-нибудь будут полезные еще какие-то пояснения по тому, как работает такой скрипт — спрашивайте ;) 	
+
+### transmission script  3
+	
+еще можно if [[ `transmission-remote -l | grep Done | wc -l` == `transmission-remote -l | wc -l`]]
+как видно сранивается кол-во завершенных закачен с общим кол-вом закачек. ИМХО намного проще того, что у вас. Еще можно добавить проверку Unknown, если послев течении n проверок число не меняется — выключать компьютер. 	
 
 
