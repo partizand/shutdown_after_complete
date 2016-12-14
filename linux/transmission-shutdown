@@ -11,8 +11,8 @@ auth="" #"--auth username:password"
 #-----------------------------------------------------
 torrentlist="transmission-remote --list "$auth
 
-count=$(transmission-remote -l | cut -c25-31 | sed -e '/^Done/ d; /^Unknown/ d; 1d; $d')
-if [ -z "$count"]; then
+count=$($torrentlist | cut -c25-31 | sed -e '/^Done/ d; /^Unknown/ d; 1d; $d')
+if [ -z "$count" ]; then
     echo "No active downloads"
     # Special torrent status
     specstat="$($torrentlist | grep $spectorrent | cut -c58-64)"
@@ -26,5 +26,4 @@ if [ -z "$count"]; then
      else
 	echo "No shutdown command"
     fi
-
 fi
