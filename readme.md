@@ -45,6 +45,7 @@ Cmnd_Alias SHUTDOWN_CMDS = /sbin/shutdown, /usr/sbin/pm-hibernate, /sbin/reboot
 	
 	transmission-remote $auth -t $specid --stop
 
+## Windows version	
 
 ### Требования
 
