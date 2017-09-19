@@ -6,17 +6,22 @@
 
 # auth if needed
 auth="" #"--auth username:password"
-sleep_delay = 60 
+sleep_delay=60 
 #-----------------------------------------------------
 
 # lock status
 
 me=`basename "$0"`
+# echo $me
 
+#count=`pgrep  $me`
+#echo "$count"
 
 # is me already?
-count_me=` ps ax | grep $me | wc -l`
-if [ $count_me -gt 0 ]; then
+count_me=` ps ax | grep "$me" | wc -l`
+# echo $count_me
+if [ $count_me -gt 3 ]; then
+    echo "Already running. Quit"
 	exit 1
 fi 
 
